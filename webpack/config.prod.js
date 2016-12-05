@@ -30,11 +30,32 @@ module.exports = Object.assign({}, baseConfig.config, {
     loaders: baseConfig.loaders.concat([
       {
         test: /\.scss$/,
-        loader: ExtractTextPlugin.extract('style-loader', 'css-loader?modules&importLoaders=2&sourceMap!postcss-loader!sass-loader?outputStyle=expanded&sourceMap=true&sourceMapContents=true'),
+        loader: ExtractTextPlugin.extract({
+          fallbackLoader: 'style-loader',
+          loader: [
+            {
+              loader: 'css-loader',
+              query: {
+                modules: true,
+                importLoaders: 2,
+                sourceMap: true,
+                 // localIdentName: '[local]___[hash:base64:5]',
+              },
+            },
+            { loader: 'postcss-loader' },
+            { loader: 'sass-loader' },
+          ],
+        }),
       },
       {
         test: /\.css$/,
-        loader: ExtractTextPlugin.extract('style-loader', 'css-loader!postcss-loader'),
+        loader: ExtractTextPlugin.extract({
+          fallbackLoader: 'style-loader',
+          loader: [
+            { loader: 'css-loader' },
+            { loader: 'postcss-loader' },
+          ],
+        }),
       },
     ]),
   },
@@ -43,7 +64,8 @@ module.exports = Object.assign({}, baseConfig.config, {
     new CleanPlugin([assetsPath], {
       root: projectRootPath,
     }),
-    new ExtractTextPlugin('[name]-[chunkhash].css', {
+    new ExtractTextPlugin({
+      filename: '[name]-[chunkhash].css',
       allChunks: true,
     }),
     new webpack.DefinePlugin({
@@ -57,9 +79,8 @@ module.exports = Object.assign({}, baseConfig.config, {
     }),
 
     new webpack.IgnorePlugin(/\.\/config/, /\/dev$/),
-    new webpack.optimize.DedupePlugin(),
-    new webpack.optimize.OccurenceOrderPlugin(),
     new webpack.optimize.UglifyJsPlugin({
+      sourceMap: true,
       compress: {
         warnings: false,
       },
